@@ -2,26 +2,119 @@
 
 This Django application uses a CLIP (Contrastive Language-Image Pre-training) model for image classification. The application fetches images from Google Drive, classifies them using the CLIP model, and displays the results in a web interface.
 
-## Setup Instructions
+## 🥘 Prep Django App
 
-1. Clone the repository
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Make sure you have the following files in the `models` directory:
-   - `prep_label_classifier.pkl`
-   - `prep_label_encoder.pkl`
+The **Prep Django App** is a backend system developed using Django that manages the flow of food preparation data. It enables structured tracking and analysis of images and related metadata for food preparation processes, allowing seamless integration with machine learning models and a Google Drive-based storage system.
 
-4. Set up your Google Drive API credentials:
-   - Create a service account in the Google Cloud Console
-   - Download the credentials JSON file
-   - Place it at the root of the project as `credentials.json`
+---
 
-5. Run the Django application:
-   ```
-   python manage.py runserver
-   ```
+## 🚀 Features
+
+- Upload and manage image data associated with food prep
+- Handle device-specific logic and metadata (MAC ID, device type, etc.)
+- Integration with Google Drive for image storage
+- Dynamic model loading from Google Cloud Storage
+- Image prediction using YOLO and CLIP models
+- Results visualization through the Django admin and custom views
+- SQLite support for local development
+- BigQuery support for production datasets
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend Framework**: Django
+- **Database**: SQLite (dev), Google BigQuery (prod)
+- **Cloud**: Google Cloud Platform (Drive, BigQuery, GCS)
+- **ML Integration**: PyTorch, OpenCLIP, YOLOv8
+- **Storage**: Google Drive / GCS for image access
+
+---
+
+## 📁 Project Structure
+
+```
+prep-django-app/
+├── manage.py
+├── prep_app/
+│   ├── models.py         # ImageData, ImagePredictionResult, TemporaryData models
+│   ├── views.py          # Views for prediction, dashboard, form
+│   ├── forms.py          # Custom form to filter by MAC ID, Date
+│   ├── urls.py           # URL routing
+│   ├── utils/            # Functions for GCS, model loading, preprocessing
+│   └── templates/        # Custom HTML templates
+├── static/
+│   └── js/css/assets     # Frontend assets
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ⚙️ Installation
+
+1. **Clone the repository**:
+
+```bash
+git clone https://github.com/atharvabadkas/prep-django-app.git
+cd prep-django-app
+```
+
+2. **Create and activate virtual environment**:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+```
+
+3. **Install dependencies**:
+
+```bash
+pip install -r requirements.txt
+```
+
+4. **Run migrations**:
+
+```bash
+python manage.py migrate
+```
+
+5. **Start the development server**:
+
+```bash
+python manage.py runserver
+```
+
+---
+
+## 🔍 Key Functionalities
+
+- Load models from GCS dynamically using `model_paths` from BigQuery
+- Classify images using YOLO for vessel detection and CLIP for SKU recognition
+- Save predictions to SQLite or forward to BigQuery for production
+- Form-based query interface to select by MAC ID, date, stream type
+- Visualization: Render predictions, confidence, and overlay image
+
+---
+
+## 🧠 ML Models
+
+- CLIP (ViT-based) for SKU recognition (via `predict_proba`)
+- YOLOv8 for vessel detection
+- Model download logic embedded using `gcsfs` and `torch.load`
+- Custom pipeline for preprocessing images and loading results
+
+---
+
+## 📊 Data Flow
+
+1. User uploads or selects images (from GDrive)
+2. Image is preprocessed
+3. YOLO detects vessels
+4. CLIP classifies ingredients
+5. Results stored in DB and shown in web dashboard
+
+---
 
 ## How It Works
 
