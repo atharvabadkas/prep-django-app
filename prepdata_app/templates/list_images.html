@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Table</title>
+    <style>
+        h1{
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px;
+        }
+        td{
+            max-width: 500px;
+            min-height: 500px;
+        }
+        .image-item{
+            max-width: 500px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .image-item img:hover {
+            transform: scale(1.1); /* Slight zoom effect on hover */
+        }
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8); /* Black with opacity */
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        .modal-content img {
+            width: 100%;  /* Increase the width */
+            height: auto;  /* Maintain the aspect ratio */
+            margin: auto;
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prep Image Data Labelling</h1>
+    <table id='data-table'>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Sensor Range</th>
+                <th>Prediction</th>
+                <th>Weight Image</th>
+                <th>Flags</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for image in table_rows %}
+            <tr>
+                <td><input type="text" value="{{ image.time_date }}"></td>
+                <td><input type="number" value="{{ image.item_weight }}"></td>
+                <td>
+                    <input type="text" name="prediction" value="{{ image.classification_result }}">
+                </td>
+                <td>
+                    <div class="image-container">
+                        <div class="image-item">
+                            <img src="{{ image.thumbnailLink|default:'#' }}" alt="{{ image.name }}" name="image" onclick="openModal(this)">
+                        </div>
+                    </div>
+                </td>
+                <td><input type="text" value="{{ image.camera_flag }}, {{ image.mcu_flag }}, {{ image.weight_flag }}"></td>
+                {% comment %} <td><input type="hidden" value="{{ image.name }}"></td> {% endcomment %}
+                <td><button class="delete-btn">Delete</button></td>
+                <td><input type="hidden" value="{{ image.name }}"></td>
+                {% comment %} <td> <span style="display: none;">{{ image.name }}</span></td> {% endcomment %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="zoomed image">
+        </div>
+    </div>
+
+    <button id="save-changes-btn">Save Changes</button>
+    <button id="export-to-excel-btn">Export to Excel</button>
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+    <script>
+        // Open modal and display the clicked image
+        function openModal(img) {
+            var modal = document.getElementById("imageModal");
+            var modalImg = document.getElementById("modalImage");
+    
+            modal.style.display = "flex";
+            modalImg.src = img.src;
+        }
+    
+        // Close the modal
+        function closeModal() {
+            var modal = document.getElementById("imageModal");
+            modal.style.display = "none";
+        }
+    </script>
+
+    <script>
+            // Delete button functionality
+    document.querySelectorAll(".delete-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            this.closest("tr").remove(); // Removes the row
+        });
+    });
+    </script>
+
+    <script>
+        console.log("DOM fully loaded and parsed:", document.readyState === "complete");
+    
+        document.getElementById("save-changes-btn").addEventListener("click", function () {
+            const rows = document.querySelectorAll("#data-table tbody tr"); // Select all table rows
+            const updatedData = [];
+            // Check if rows exist
+            console.log("Rows found:", rows.length);
+            if (rows.length === 0) {
+                console.log("No rows found in the table");
+            }
+        
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+    
+                console.log("Row cells:", cells.length);
+    
+                // Extract values from the <input> fields inside the <td> elements
+                const timestamp = cells[0].querySelector("input").value.trim() || "";       // Extract from input[type="text"]
+                const itemWeight = parseFloat(cells[1].querySelector("input").value) || 0;  // Extract from input[type="number"]
+                const prediction = cells[2].querySelector("input").value.trim() || "";  
+                const image_name = cells[6].querySelector("input[type='hidden']").value.trim() || "";  
+    
+    
+                updatedData.push({
+                    timestamp: timestamp,
+                    item_weight: itemWeight,
+                    prediction: prediction,
+                    name: image_name,
+                });
+                console.log('print pushed data')
+                console.log(updatedData)
+            });
+        
+            // Debugging logs
+            console.log("Updated Data to Save:", updatedData);
+        
+            // Send updated data to the server
+            fetch("/update-data/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ data: updatedData })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to update data");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Server Response:", data);
+                alert("Data updated successfully!");
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while updating data.");
+            });
+        });
+    
+    </script>
+    
+    <script>
+        document.getElementById("export-to-excel-btn").addEventListener("click", function () {
+            fetch("/export-to-excel/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.getElementById("csrf-token").value
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to export data");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "updated_data.xlsx"; // Filename for the downloaded file
+                a.click(); // Trigger the download
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while exporting data.");
+            });
+        });
+    </script>
+        
+
+</body>
+</html>

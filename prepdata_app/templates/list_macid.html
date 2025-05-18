@@ -1,0 +1,73 @@
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+    <title>Select Folder</title>
+</head>
+<body>
+    <h1>Select a Folder</h1>
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <label for="folder">Choose a folder:</label>
+        <select name="selected_folder" id="folder">
+            <option value="">--Select--</option>
+            {% for folder in folder_options %}
+                <option value="{{ folder.id }}">{{ folder.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Next</button>
+    </form>
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select MAC ID</title>
+</head>
+<body>
+    <h1>Select MAC ID</h1>
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <label for="macid">Choose a MAC ID:</label>
+        <select name="selected_macid" id="macid">
+            <option value="">--Select--</option>
+            {% for folder in macid_options %}
+                <option value="{{ folder.id }}">{{ folder.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Next</button>
+    </form>
+    
+</body>
+</html>
+
+
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+    <title>Select MAC ID</title>
+</head>
+<body>
+    <h1>Select MAC ID</h1>
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <label for="macid">Choose a MAC ID:</label>
+        <select name="selected_macid" id="macid">
+            <option value="">--Select--</option>
+            {% for folder in macid_options %}
+                <option value="{{ folder.id }}">{{ folder.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Next</button>
+    </form>
+</body>
+</html> {% endcomment %}
